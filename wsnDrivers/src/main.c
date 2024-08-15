@@ -24,9 +24,11 @@
 
 /* CODE EXECUTION DEFINE VARIABLERS */
 #define LAUNCH_CODE_DEVACADEMY_EXAMPLE_REQUIRED false
-#define LAUNCH_CODE_WSN_0_EXAMPLE_REQUIRED true
+#define LAUNCH_CODE_WSN_0_EXAMPLE_REQUIRED false
 #define LAUNCH_CODE_WSN_1_EXAMPLE_REQUIRED false
+#define LAUNCH_CODE_WSN_2_EXAMPLE_REQUIRED true
 
+#define END_MESSAGE_FOR_EXAMPLES "End of code reach successfully\n"
 
 
 /* 1000 msec = 1 sec */
@@ -41,27 +43,32 @@
 #define GPIO_OUTSET_OFFSET_REG 0x508
 #define GPIO_DIR_OFFSET_REG 0x514
 #define GPIO_DIRSET_OFFSET_REG 0x518
-
 #define CLOCK_BASE_ADDRESS 0x40000000
 #define CLOCK_HFCLKSTAT_OFFSET_REG 0x40c
 #define CLOCK_LFCLKSTAT_OFFSET_REG 0x418
-
 volatile uint32_t *p_gpio_out_reg = (volatile uint32_t *) (P0_BASE_ADDRESS + GPIO_OUT_OFFSET_REG);
 volatile uint32_t *p_gpio_outset_reg = (volatile uint32_t *) (P0_BASE_ADDRESS + GPIO_OUTSET_OFFSET_REG);
 volatile uint32_t *p_gpio_dir_reg = (volatile uint32_t *) (P0_BASE_ADDRESS + GPIO_DIR_OFFSET_REG);
 volatile uint32_t *p_gpio_dirset_reg = (volatile uint32_t *) (P0_BASE_ADDRESS + GPIO_DIRSET_OFFSET_REG);
 volatile uint32_t *p_clk_hfclkstat = (volatile uint32_t *) (CLOCK_BASE_ADDRESS + CLOCK_HFCLKSTAT_OFFSET_REG);
 volatile uint32_t *p_clk_lfclkstat = (volatile uint32_t *) (CLOCK_BASE_ADDRESS + CLOCK_LFCLKSTAT_OFFSET_REG);
-
 #define GPIO_PIN_13_LED1 13
 
 
 
+/* Define for LAUNCH_CODE_WSN_2_EXAMPLE_REQUIRED */
+// #define LED1_NODE DT_NODELABEL(led1)
+// #define LED1_GPIO_NODE DT_PHANDLE_BY_IDX(LED1_NODE, gpios, 0)
+
+
+
 /* Define for LAUNCH_CODE_WSN_1_EXAMPLE_REQUIRED */
-#define ERROR_MESSAGE_GPIO_CONFIG "Could not configure GPIO in LAUNCH_CODE_WSN1_EXAMPLE"
+#define ERROR_MESSAGE_GPIO_CONFIG "Could not configure GPIO in LAUNCH_CODE_WSN1_EXAMPLE\n"
+#define ERROR_MESSAGE_GPIO_SET "Could not set GPIO in LAUNCH_CODE_WSN1_EXAMPLE\n"
 #define GPIO_NODE_ID DT_NODELABEL(gpio0)
 #define GPIO_NAME DEVICE_DT_NAME(GPIO_NODE_ID)
-
+#define LED1_ON 0
+#define LED1_OFF 1
 const struct device *gpio_led_wsn_1;
 
 
@@ -78,6 +85,22 @@ static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
 int main(void)
 {
+	/* LED1 from nRF52840 DK blinking example */
+	if (LAUNCH_CODE_WSN_2_EXAMPLE_REQUIRED){
+		gpio_led_wsn_1 = device_get_binding(GPIO_NAME);
+		if (SUCCESS != gpio_pin_configure(gpio_led_wsn_1, GPIO_PIN_13_LED1, GPIO_OUTPUT)){
+			printk(ERROR_MESSAGE_GPIO_CONFIG);
+			return 0;
+		}
+		if (SUCCESS != gpio_pin_set(gpio_led_wsn_1, GPIO_PIN_13_LED1, LED1_ON)){
+			printk(ERROR_MESSAGE_GPIO_SET);
+			return 0;
+		}
+		printk(END_MESSAGE_FOR_EXAMPLES);
+		while(true);
+	}
+
+	/* Original blinking LED example for nRF52840 DK */
 	if (LAUNCH_CODE_DEVACADEMY_EXAMPLE_REQUIRED){
 		int ret;
 		int count = 0;
@@ -104,18 +127,19 @@ int main(void)
 		}
 	}    
 
-	/*  */
+	/* LED1 from nRF52840 DK blinking example */
 	if (LAUNCH_CODE_WSN_1_EXAMPLE_REQUIRED){
-		printk(GPIO_NAME);
-		while(true);
+		//printk(GPIO_NAME);
 		gpio_led_wsn_1 = device_get_binding(GPIO_NAME);
-		// if (SUCCESS != (gpio_led_wsn_1, GPIO_PIN_13_LED1, GPIO_OUTPUT)){ //WARNINGGGGGGGGGGGGGG
-		// 	printk(ERROR_MESSAGE_GPIO_CONFIG);
-		// 	return 0;
-		// }
-
-		gpio_pin_set(gpio_led_wsn_1, GPIO_PIN_13_LED1, 1);
-
+		if (SUCCESS != gpio_pin_configure(gpio_led_wsn_1, GPIO_PIN_13_LED1, GPIO_OUTPUT)){
+			printk(ERROR_MESSAGE_GPIO_CONFIG);
+			return 0;
+		}
+		if (SUCCESS != gpio_pin_set(gpio_led_wsn_1, GPIO_PIN_13_LED1, LED1_ON)){
+			printk(ERROR_MESSAGE_GPIO_SET);
+			return 0;
+		}
+		printk(END_MESSAGE_FOR_EXAMPLES);
 		while(true);
 	}
 
@@ -137,6 +161,6 @@ int main(void)
 		while(true);
 	}
 
-	/* Shoudl never reach here */
+	/* Should never reach here */
 	return 0;
 }
