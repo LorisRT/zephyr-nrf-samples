@@ -1,4 +1,11 @@
 #ifndef APP_MPU6050_H_
 #define APP_MPU6050_H_
 
+typedef enum {
+    SUCCESS,
+    MPU6050_CHECK_SANITY_ERROR,
+    MPU6050_READ_ERROR,
+    MPU6050_UNEXPECTED_ERROR
+} MPU6050_STATUS_e;
+
 #endif 

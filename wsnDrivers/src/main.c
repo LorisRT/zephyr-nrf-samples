@@ -60,6 +60,7 @@
 
 /* MPU6050 REGISTER DEFINITION */
 #define MPU6050_WHO_AM_I 0x75
+#define MPU6050_PWR_MGMT_A 0x6b
 
 
 /* Define for LAUNCH_CODE_WDN_0_EXAMPLE_REQUIRED */
@@ -125,7 +126,7 @@ int main(void)
 {
 	/* Extract MPU6050 inertial data with i2c protocol */
 	if (LAUNCH_CODE_I2C_FOR_MPU6050_REQUIRED){
-		
+
 	}
 
 	/* First example of i2c use with nrf and zephyr functions */
