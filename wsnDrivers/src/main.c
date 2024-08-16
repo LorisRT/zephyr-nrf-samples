@@ -35,6 +35,8 @@
 #include <hal/nrf_gpio.h>
 #include <zephyr/drivers/i2c.h>
 
+#include "app_mpu6050.h"
+
 #define SUCCESS 0
 
 
@@ -43,7 +45,8 @@
 #define LAUNCH_CODE_WSN_0_EXAMPLE_REQUIRED false
 #define LAUNCH_CODE_WSN_1_EXAMPLE_REQUIRED false
 #define LAUNCH_CODE_WSN_2_EXAMPLE_REQUIRED false
-#define LAUNCH_CODE_WSN_I2C_EXAMPLE_REQUIRED true
+#define LAUNCH_CODE_WSN_I2C_EXAMPLE_REQUIRED false
+#define LAUNCH_CODE_I2C_FOR_MPU6050_REQUIRED true
 
 #define END_MESSAGE_FOR_EXAMPLES "End of code reach successfully\n"
 #define END_MESSAGE_UNEXPECTED_OUTPUT "Reached end return, unexpected error in code"
@@ -120,6 +123,12 @@ static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
 int main(void)
 {
+	/* Extract MPU6050 inertial data with i2c protocol */
+	if (LAUNCH_CODE_I2C_FOR_MPU6050_REQUIRED){
+		
+	}
+
+	/* First example of i2c use with nrf and zephyr functions */
 	if (LAUNCH_CODE_WSN_I2C_EXAMPLE_REQUIRED){
 		if (false == device_is_ready(i2c_device_mpu6050.bus)){
 			printk("I2C device not ready\n");
