@@ -1,7 +1,16 @@
-/*
- * Copyright (c) 2016 Intel Corporation
+/**
+ ******************************************************************************
+ * @file           : main.c
+ * @author         : LorisRT
+ * @brief          : driver and sample developpement for nRF52840 with zephir
+ ******************************************************************************
+ * @attention
  *
- * SPDX-License-Identifier: Apache-2.0
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
  */
 /*
  Doc. for identifier: 
@@ -12,6 +21,9 @@
 
  Doc. for function call:
  https://stackoverflow.com/questions/35186290/c-struct-object-stack-function-call-is-not-allowed-in-constant-expression-err
+
+ Doc. for GPIO with devicetree:
+ https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/hardware/peripherals/gpio.html#structgpio__dt__spec
 */
 
 #include <zephyr/kernel.h>
@@ -29,6 +41,7 @@
 #define LAUNCH_CODE_WSN_2_EXAMPLE_REQUIRED true
 
 #define END_MESSAGE_FOR_EXAMPLES "End of code reach successfully\n"
+#define END_MESSAGE_UNEXPECTED_OUTPUT "Reached end return, unexpected error in code"
 
 
 /* 1000 msec = 1 sec */
@@ -57,8 +70,12 @@ volatile uint32_t *p_clk_lfclkstat = (volatile uint32_t *) (CLOCK_BASE_ADDRESS +
 
 
 /* Define for LAUNCH_CODE_WSN_2_EXAMPLE_REQUIRED */
-// #define LED1_NODE DT_NODELABEL(led1)
-// #define LED1_GPIO_NODE DT_PHANDLE_BY_IDX(LED1_NODE, gpios, 0)
+// Doc: https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/hardware/peripherals/gpio.html#group__gpio__interface_1ga2fa6bb5880f46984f9fc29c70f7d503e
+#define LED0_DK DT_ALIAS(led0)
+// - GPIO_DT_SPEC_GET is a static initialiser for a struct gpio_dt_spec:
+// requires: node_id and property name (see dts file for gpio led0 node)
+// - gpio_dt_spec is a container (struct in C) for GPIO pin information speficied in dt
+static const struct gpio_dt_spec ledFromDK = GPIO_DT_SPEC_GET(LED0_DK, gpios);
 
 
 
@@ -87,13 +104,14 @@ int main(void)
 {
 	/* LED1 from nRF52840 DK blinking example */
 	if (LAUNCH_CODE_WSN_2_EXAMPLE_REQUIRED){
-		gpio_led_wsn_1 = device_get_binding(GPIO_NAME);
-		if (SUCCESS != gpio_pin_configure(gpio_led_wsn_1, GPIO_PIN_13_LED1, GPIO_OUTPUT)){
-			printk(ERROR_MESSAGE_GPIO_CONFIG);
+		if (false == gpio_is_ready_dt(&ledFromDK)){
 			return 0;
 		}
-		if (SUCCESS != gpio_pin_set(gpio_led_wsn_1, GPIO_PIN_13_LED1, LED1_ON)){
-			printk(ERROR_MESSAGE_GPIO_SET);
+		if (SUCCESS != gpio_pin_configure_dt(&ledFromDK, GPIO_OUTPUT)){
+			return 0;
+		}
+		// WARNING: LED ON from dt functions is set with 1 (not 0 as opposed to other example)
+		if (SUCCESS != gpio_pin_set_dt(&ledFromDK, 1)){
 			return 0;
 		}
 		printk(END_MESSAGE_FOR_EXAMPLES);
@@ -162,5 +180,6 @@ int main(void)
 	}
 
 	/* Should never reach here */
+	printk(END_MESSAGE_UNEXPECTED_OUTPUT);
 	return 0;
 }
