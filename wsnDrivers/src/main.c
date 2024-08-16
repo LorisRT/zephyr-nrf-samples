@@ -24,12 +24,16 @@
 
  Doc. for GPIO with devicetree:
  https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/hardware/peripherals/gpio.html#structgpio__dt__spec
+
+ Doc. for I2C example from Nordic artile:
+ https://devzone.nordicsemi.com/guides/nrf-connect-sdk-guides/b/peripherals/posts/twi-ic2-implementation-with-nrfx-twis-driver
 */
 
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/sys/printk.h>
 #include <hal/nrf_gpio.h>
+#include <zephyr/drivers/i2c.h>
 
 #define SUCCESS 0
 
@@ -38,7 +42,8 @@
 #define LAUNCH_CODE_DEVACADEMY_EXAMPLE_REQUIRED false
 #define LAUNCH_CODE_WSN_0_EXAMPLE_REQUIRED false
 #define LAUNCH_CODE_WSN_1_EXAMPLE_REQUIRED false
-#define LAUNCH_CODE_WSN_2_EXAMPLE_REQUIRED true
+#define LAUNCH_CODE_WSN_2_EXAMPLE_REQUIRED false
+#define LAUNCH_CODE_WSN_I2C_EXAMPLE_REQUIRED true
 
 #define END_MESSAGE_FOR_EXAMPLES "End of code reach successfully\n"
 #define END_MESSAGE_UNEXPECTED_OUTPUT "Reached end return, unexpected error in code"
@@ -48,6 +53,10 @@
 #define SLEEP_TIME_MS   1000
 #define LIMIT_COUNT_BLINKING 1000
 
+
+
+/* MPU6050 REGISTER DEFINITION */
+#define MPU6050_WHO_AM_I 0x75
 
 
 /* Define for LAUNCH_CODE_WDN_0_EXAMPLE_REQUIRED */
@@ -69,6 +78,13 @@ volatile uint32_t *p_clk_lfclkstat = (volatile uint32_t *) (CLOCK_BASE_ADDRESS +
 
 
 
+/* Define for LAUNCH_CODE_WSN_I2C_EXAMPLE_REQUIRED */
+#define ERROR_MESSAGE_WRITE_FAIL_IN_I2C "Could not perform a I2C write for the LAUNCH_CODE_WSN_I2C_EXAMPLE"
+#define I2C0_NODE DT_NODELABEL(mpu6050)
+static const struct i2c_dt_spec i2c_device_mpu6050 = I2C_DT_SPEC_GET(I2C0_NODE);
+
+
+
 /* Define for LAUNCH_CODE_WSN_2_EXAMPLE_REQUIRED */
 // Doc: https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/hardware/peripherals/gpio.html#group__gpio__interface_1ga2fa6bb5880f46984f9fc29c70f7d503e
 #define LED0_DK DT_ALIAS(led0)
@@ -76,6 +92,7 @@ volatile uint32_t *p_clk_lfclkstat = (volatile uint32_t *) (CLOCK_BASE_ADDRESS +
 // requires: node_id and property name (see dts file for gpio led0 node)
 // - gpio_dt_spec is a container (struct in C) for GPIO pin information speficied in dt
 static const struct gpio_dt_spec ledFromDK = GPIO_DT_SPEC_GET(LED0_DK, gpios);
+#define LED_ON_DT 1
 
 
 
@@ -100,8 +117,26 @@ const struct device *gpio_led_wsn_1;
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
 
+
 int main(void)
 {
+	if (LAUNCH_CODE_WSN_I2C_EXAMPLE_REQUIRED){
+		if (false == device_is_ready(i2c_device_mpu6050.bus)){
+			printk("I2C device not ready\n");
+			return 0;
+		}
+
+		uint8_t config[1] = {MPU6050_WHO_AM_I};
+		
+		if (SUCCESS != i2c_write_dt(&i2c_device_mpu6050, config, sizeof(config))){
+			printk(ERROR_MESSAGE_WRITE_FAIL_IN_I2C);
+			return 0;
+		}
+
+		printk(END_MESSAGE_FOR_EXAMPLES);
+		while(true);
+	}
+
 	/* LED1 from nRF52840 DK blinking example */
 	if (LAUNCH_CODE_WSN_2_EXAMPLE_REQUIRED){
 		if (false == gpio_is_ready_dt(&ledFromDK)){
@@ -111,7 +146,7 @@ int main(void)
 			return 0;
 		}
 		// WARNING: LED ON from dt functions is set with 1 (not 0 as opposed to other example)
-		if (SUCCESS != gpio_pin_set_dt(&ledFromDK, 1)){
+		if (SUCCESS != gpio_pin_set_dt(&ledFromDK, LED_ON_DT)){
 			return 0;
 		}
 		printk(END_MESSAGE_FOR_EXAMPLES);
