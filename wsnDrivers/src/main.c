@@ -126,7 +126,14 @@ int main(void)
 {
 	/* Extract MPU6050 inertial data with i2c protocol */
 	if (LAUNCH_CODE_I2C_FOR_MPU6050_REQUIRED){
+		bool no_error_in_acquisition = true;
 
+		while(no_error_in_acquisition){
+
+		}
+		
+		printk("Error in data acquisition of the MPU6050 IMU\n");
+		return 0;
 	}
 
 	/* First example of i2c use with nrf and zephyr functions */
