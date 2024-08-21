@@ -129,93 +129,16 @@ int main(void)
 	/* Extract MPU6050 inertial data with i2c protocol */
 	if (LAUNCH_CODE_I2C_FOR_MPU6050_REQUIRED){
 
-		bool no_error_in_acquisition = true;
-		bool sanity_check_not_done = true;
-		bool error_in_sanity_check = false;
-
-		uint8_t sanity_check_done_counter = 0; 
-		uint8_t who_am_i_check = 0x00;
-		uint8_t pwr_mgmt_1_reg = 0x00;
-
-		uint8_t config[1] = {MPU6050_WHO_AM_I_REG};
-
-		if (false == device_is_ready(i2c_device_mpu6050.bus)){
-			printk("MPU6050: I2C device not ready\n");
+		if (MPU6050_SUCCESS !=  mpu6050_sanity_check(&i2c_device_mpu6050)){
+			printk("MPU6050: sanity check fail\n");
 			return 0;
-		}
-
-		/* Sanity check of MPU6050 */
-		while(sanity_check_not_done && (sanity_check_done_counter <= SANITY_CHECK_COUNTER_LIMIT)){
-			if (SUCCESS != i2c_write_dt(&i2c_device_mpu6050, config, sizeof(config))){
-				return 0;
-			}
-			if (SUCCESS != i2c_read_dt(&i2c_device_mpu6050, &who_am_i_check, sizeof(who_am_i_check))){
-				return 0;
-			}
-			sanity_check_not_done = false;
-		}
-		if (error_in_sanity_check && (sanity_check_done_counter <= SANITY_CHECK_COUNTER_LIMIT)){
-			printk("MPU6050: Error while trying to perform MPU6050 sanity check");
-			return MPU6050_READ_ERROR;
-		}
-		if (sanity_check_done_counter >= SANITY_CHECK_COUNTER_LIMIT){
-			printk("MPU6050: Could not perform sanity check of MPU6050\n");
-			return MPU6050_UNEXPECTED_ERROR;
-		}
-		if (0x68 == who_am_i_check){
-			printk("MPU6050: Sanity check done, WHO_AM_I_REG = 0x%x\n", who_am_i_check);
-		}
-		else{
-			printk("MPU6050: Could not perform sanity check of MPU6050\n");
-			return MPU6050_CHECK_SANITY_ERROR;
 		}
 		
 		/* Disable MPU6050 sleep mode */
-		config[0] = MPU6050_PWR_MGMT_A_REG; // get reset value of pwr_mgmt_1 register 
-		if (SUCCESS != i2c_write_dt(&i2c_device_mpu6050, config, sizeof(config))){
-			return 0;
-		}
-		if (SUCCESS != i2c_read_dt(&i2c_device_mpu6050, &pwr_mgmt_1_reg, sizeof(pwr_mgmt_1_reg))){
-			return 0;
-		}
-		printk("MPU6050 power status before sleep wake up: PWR_MGMT_1_REG = 0x%x\n", pwr_mgmt_1_reg);
-		pwr_mgmt_1_reg &= (uint8_t)(~(1<<6)); // disable sleep bit 
-		if (SUCCESS != i2c_write_dt(&i2c_device_mpu6050, config, sizeof(config))){
-			return 0;
-		}
-		config[0] = pwr_mgmt_1_reg;
-		if (SUCCESS != i2c_write_dt(&i2c_device_mpu6050, config, sizeof(config))){
-			return 0;
-		}
-		config[0] = MPU6050_PWR_MGMT_A_REG; // read to confirm sleep mode disable
-		pwr_mgmt_1_reg = 0x00;
-		if (SUCCESS != i2c_write_dt(&i2c_device_mpu6050, config, sizeof(config))){
-			return 0;
-		}
-		if (SUCCESS != i2c_read_dt(&i2c_device_mpu6050, &pwr_mgmt_1_reg, sizeof(pwr_mgmt_1_reg))){
-			return 0;
-		}
-		printk("MPU6050 power status after sleep wake up: PWR_MGMT_1_REG = 0x%x\n", pwr_mgmt_1_reg);
+		// TO DO
+		printk("MPU6050: sanity check done\n");
 
-
-		// if (SUCCESS != i2c_read_dt(&i2c_device_mpu6050, &who_am_i_check, sizeof(who_am_i_check))){
-		// 	return MPU6050_READ_ERROR;
-		// }
-		// printk("MPU6050 checked: WHO_AM_I_REG = 0x%x\n", who_am_i_check);
-
-		// /* Disable MPU6050 sleep mode */
-		// if (SUCCESS != i2c_read_dt(&i2c_device_mpu6050, &pwr_mgmt_1_reg, sizeof(pwr_mgmt_1_reg))){
-		// 	return MPU6050_READ_ERROR;
-		// }
-		// printk("pwr_mgmt_1_reg = 0x%x\n", pwr_mgmt_1_reg);
-
-		/* Loop for data acquisition */
-		while(no_error_in_acquisition){
-
-		}
-		
-		printk("Error in data acquisition of the MPU6050 IMU\n");
-		return  MPU6050_UNEXPECTED_ERROR;
+		while(true);
 	}
 
 	/* First example of i2c use with nrf and zephyr functions */
@@ -225,7 +148,7 @@ int main(void)
 			return 0;
 		}
 
-		uint8_t config[1] = {MPU6050_WHO_AM_I};
+		uint8_t config[1] = {MPU6050_WHO_AM_I_REG};
 		
 		if (SUCCESS != i2c_write_dt(&i2c_device_mpu6050, config, sizeof(config))){
 			printk(ERROR_MESSAGE_WRITE_FAIL_IN_I2C);
