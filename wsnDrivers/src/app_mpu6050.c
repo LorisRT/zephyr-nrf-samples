@@ -1,5 +1,25 @@
 #include "app_mpu6050.h"
 
+
+/**
+ * @brief function to read acceleration values from mpu6050 ACCEL_OUT registers, i.e.: from 0x3b to 0x40
+ */
+MPU6050_STATUS_e mpu6050_get_accel(const struct i2c_dt_spec * device_mpu6050, uint16_t * ax, uint16_t * ay, uint16_t * az){
+    uint8_t temp_buffer[SIZE_OF_ACCEL_OUT_REG_FOR_BURST_READ] = {0};
+    
+    if (SUCCESS != i2c_burst_read_dt(device_mpu6050, MPU6050_ACCEL_XOUT_H, temp_buffer, SIZE_OF_ACCEL_OUT_REG_FOR_BURST_READ)){
+        return MPU6050_READ_ERROR;
+    }
+    else{
+        *ax = (uint16_t)((temp_buffer[0]<<8) | (temp_buffer[1]<<0));
+        *ay = (uint16_t)((temp_buffer[2]<<8) | (temp_buffer[3]<<0));
+        *az = (uint16_t)((temp_buffer[4]<<8) | (temp_buffer[5]<<0));
+        return MPU6050_SUCCESS;
+    }
+
+    return MPU6050_UNEXPECTED_ERROR;
+}
+
 /**
  * @brief function checking the availability of the mpu6050 through i2c
  */

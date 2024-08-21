@@ -53,7 +53,7 @@
 
 
 /* 1000 msec = 1 sec */
-#define SLEEP_TIME_MS   1000
+#define SLEEP_TIME_MS   150
 #define LIMIT_COUNT_BLINKING 1000
 
 
@@ -61,8 +61,9 @@
 /* MPU6050 REGISTER DEFINITION */
 #define MPU6050_WHO_AM_I_REG 0x75
 #define MPU6050_PWR_MGMT_A_REG 0x6b
+#define ACC_LSB 16384.0f /* [LSB/g] */
+#define GRAVITY 9.80665f
 
-#define SANITY_CHECK_COUNTER_LIMIT 3
 
 
 /* Define for LAUNCH_CODE_WDN_0_EXAMPLE_REQUIRED */
@@ -129,15 +130,37 @@ int main(void)
 	/* Extract MPU6050 inertial data with i2c protocol */
 	if (LAUNCH_CODE_I2C_FOR_MPU6050_REQUIRED){
 
+		uint16_t acc_x_reg = 0;
+		uint16_t acc_y_reg = 0;
+		uint16_t acc_z_reg = 0;
+
+		int16_t ax = 0;
+		int16_t ay = 0;
+		int16_t az = 0;
+
 		if (MPU6050_SUCCESS !=  mpu6050_sanity_check(&i2c_device_mpu6050)){
 			printk("MPU6050: sanity check fail\n");
 			return 0;
 		}
-		
-		/* Disable MPU6050 sleep mode */
-		// TO DO
 		printk("MPU6050: sanity check done\n");
 
+		if (MPU6050_SUCCESS != mpu6050_sleep_control(&i2c_device_mpu6050, false)){
+			printk("MPU6050: sleep disable failed\n");
+			return 0;
+		}
+		printk("MPU6050: sleep disable done\n");
+		
+		printk("MPU6050: begining of data acquisition:\n");
+		while(MPU6050_SUCCESS == mpu6050_get_accel(&i2c_device_mpu6050, &acc_x_reg, &acc_y_reg, &acc_z_reg)){
+			// ax = (int16_t) ((((float) (acc_x_reg))/ACC_LSB)*GRAVITY);
+			// ay = (int16_t) ((((float) (acc_y_reg))/ACC_LSB)*GRAVITY);
+			// az = (int16_t) ((((float) (acc_z_reg))/ACC_LSB)*GRAVITY);
+			printk("MPU6050: ACCEL = (X = %d, Y = %d, Z = %d)\n", ax, ay, az);
+			k_msleep(SLEEP_TIME_MS);
+		}
+		
+		/* shoudl not get here, otherwire error during data acquisition */
+		printk("MPU6050: error during data collection\n");
 		while(true);
 	}
 
