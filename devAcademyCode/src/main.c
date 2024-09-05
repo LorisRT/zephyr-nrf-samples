@@ -84,6 +84,8 @@ volatile uint32_t *p_clk_lfclkstat = (volatile uint32_t *) (CLOCK_BASE_ADDRESS +
 #define GPIO_PIN_13_LED1 13
 
 
+/* Define for LAUNCH_CODE_ */
+
 
 /* Define for LAUNCH_CODE_WSN_I2C_EXAMPLE_REQUIRED */
 #define ERROR_MESSAGE_WRITE_FAIL_IN_I2C "Could not perform a I2C write for the LAUNCH_CODE_WSN_I2C_EXAMPLE"
