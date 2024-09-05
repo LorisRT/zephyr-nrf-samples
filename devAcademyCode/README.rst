@@ -1,7 +1,7 @@
 Overview
 ********
 
-The wsnDrivers provide a main.c source file with multiple chunk of code that are executed on the Nordic Developement Kit (DK) depending on the value of #define variables
+The devAcademyCode folder provide a main.c source file with multiple chunks of code that are executed on the Nordic Developement Kit (DK) depending on the value of #define variables
 
 Requirements
 ************
