@@ -35,6 +35,10 @@
 #include <hal/nrf_gpio.h>
 #include <zephyr/drivers/i2c.h>
 
+#include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/gap.h>
+#include <zephyr/bluetooth/uuid.h>
+
 #include "app_mpu6050.h"
 
 #define SUCCESS 0
@@ -45,15 +49,21 @@
 #define LAUNCH_CODE_WSN_0_EXAMPLE_REQUIRED false
 #define LAUNCH_CODE_WSN_1_EXAMPLE_REQUIRED false
 #define LAUNCH_CODE_WSN_2_EXAMPLE_REQUIRED false
+
 #define LAUNCH_CODE_WSN_I2C_EXAMPLE_REQUIRED false
-#define LAUNCH_CODE_I2C_FOR_MPU6050_REQUIRED true
+#define LAUNCH_CODE_I2C_FOR_MPU6050_REQUIRED false
+
+#define LAUNCH_CODE_PUSH_BUTTON_AND_LED_POLLING_REQUIRED false
+
+#define BLE_CODE_EXERCICE_2_REQUIRED false
+#define BLE_CODE_EXERCICE_3_CONNECTABLE_ADVERTISING_REQUIRED true
 
 #define END_MESSAGE_FOR_EXAMPLES "End of code reach successfully\n"
 #define END_MESSAGE_UNEXPECTED_OUTPUT "Reached end return, unexpected error in code"
 
 
 /* 1000 msec = 1 sec */
-#define SLEEP_TIME_MS   150
+#define SLEEP_TIME_MS   1000
 #define LIMIT_COUNT_BLINKING 1000
 
 
@@ -84,7 +94,34 @@ volatile uint32_t *p_clk_lfclkstat = (volatile uint32_t *) (CLOCK_BASE_ADDRESS +
 #define GPIO_PIN_13_LED1 13
 
 
-/* Define for LAUNCH_CODE_ */
+/* Define and data structure for BLE_CODE_EXERCICE_2_REQUIRED */
+#define STRING_FOR_SCAN "TTT"
+static struct bt_le_adv_param *adv_param =
+	BT_LE_ADV_PARAM(BT_LE_ADV_OPT_NONE, /* No options specified */
+					800, /* Min Advertising Interval 500ms (800*0.625ms) */
+					801, /* Max Advertising Interval 500.625ms (801*0.625ms) */
+					NULL); /* Set to NULL for undirected advertising */
+#define COMPANY_ID_CODE 0x0101 // To ask Nathan if interesting
+/* BLE_CODE_EXERCICE_2_REQUIRED: data structure for dynamically changing advertising data */
+typedef struct adv_mfg_data {
+	uint16_t company_code; /* Company Identifier Code. */
+	uint16_t number_press; /* Number of times Button 1 is pressed */
+} adv_mfg_data_type;
+
+static adv_mfg_data_type adv_mfg_data = {COMPANY_ID_CODE, 0x00};
+
+#define DEVICE_NAME CONFIG_BT_DEVICE_NAME
+#define DEVICE_NAME_LEN (sizeof(DEVICE_NAME) - 1)
+static const struct bt_data ad[] = {
+	BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_NO_BREDR),
+	BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
+	/* STEP 3 - Include the Manufacturer Specific Data in the advertising packet. */
+	BT_DATA(BT_DATA_MANUFACTURER_DATA, (unsigned char *)&adv_mfg_data, sizeof(adv_mfg_data)),
+};
+static const struct bt_data sd[] = {
+	BT_DATA(BT_DATA_URI, STRING_FOR_SCAN, sizeof(STRING_FOR_SCAN)),
+};
+uint16_t button_counter = 0;
 
 
 /* Define for LAUNCH_CODE_WSN_I2C_EXAMPLE_REQUIRED */
@@ -129,6 +166,35 @@ static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
 int main(void)
 {
+	/**
+	 * First implementation for BLE from devAcademy
+	 */
+	if (BLE_CODE_EXERCICE_3_CONNECTABLE_ADVERTISING_REQUIRED){
+
+	}
+	if (BLE_CODE_EXERCICE_2_REQUIRED){
+		int err;
+		if (err = bt_enable(NULL)){
+			printk(">ERROR: Could not initialise BLE");
+			return 0;
+		}
+		if (err = bt_le_adv_start(adv_param, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd))){
+			printk(">ERROR: Could not sdet BLE advertising and scan messages");
+			return 0;
+		}
+		while(true){
+			adv_mfg_data.number_press += 1;
+			bt_le_adv_update_data(ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
+			k_msleep(SLEEP_TIME_MS);
+		}
+		return 0;
+	}
+
+	/* Toggle LED1 from DK if button 1 is pushed: polling */
+	if (LAUNCH_CODE_PUSH_BUTTON_AND_LED_POLLING_REQUIRED){
+		// TODO
+	}
+
 	/* Extract MPU6050 inertial data with i2c protocol */
 	if (LAUNCH_CODE_I2C_FOR_MPU6050_REQUIRED){
 
